@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include "event_loop.h"
+#include "tcp_conn.h"
 
 class tcp_server
 { 
@@ -24,4 +25,18 @@ private:
 
     //event_loop epoll事件机制
     event_loop* _loop;
+
+ // ---- 客户端链接管理部分-----
+public:
+    static void increase_conn(int connfd, tcp_conn *conn);    //新增一个新建的连接
+    static void decrease_conn(int connfd);    //减少一个断开的连接
+    static void get_conn_num(int *curr_conn);     //得到当前链接的刻度
+    static tcp_conn **conns;        //全部已经在线的连接信息
+private:
+    //TODO 
+    //从配置文件中读取
+#define MAX_CONNS  2
+    static int _max_conns;          //最大client链接个数
+    static int _curr_conns;         //当前链接刻度
+    static pthread_mutex_t _conns_mutex; //保护_curr_conns刻度修改的锁
 };
