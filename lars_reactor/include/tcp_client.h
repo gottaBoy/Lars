@@ -35,12 +35,15 @@ public:
 
     ~tcp_client();
 
-
     //设置业务处理回调函数
-    void set_msg_callback(msg_callback *msg_cb) 
-    {
-        this->_msg_callback = msg_cb;
-    }
+    // void set_msg_callback(msg_callback *msg_cb) 
+    // {
+    //     this->_msg_callback = msg_cb;
+    // }
+    //注册消息路由回调函数
+    void add_msg_router(int msgid, msg_callback *cb, void *user_data = NULL) {
+        _router.register_msg_router(msgid, cb, user_data);
+    };
 
     bool connected; //链接是否创建成功
     //server端地址
@@ -58,5 +61,7 @@ private:
     //当前客户端的名称 用户记录日志
     const char *_name;
 
-    msg_callback *_msg_callback;
+    // msg_callback *_msg_callback;
+    //处理消息的分发路由
+    msg_router _router; 
 };

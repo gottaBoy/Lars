@@ -28,6 +28,9 @@ int tcp_server::_curr_conns = 0;
 //保护_curr_conns刻度修改的锁
 pthread_mutex_t tcp_server::_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+// ==== 消息分发路由   ===
+msg_router tcp_server::router;
+
 //临时的收发消息
 // struct message{
 //     char data[m4K];

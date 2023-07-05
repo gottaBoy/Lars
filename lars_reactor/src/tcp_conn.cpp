@@ -51,6 +51,11 @@ tcp_conn::tcp_conn(int connfd, event_loop *loop)
     tcp_server::increase_conn(_connfd, this);
 }
 
+int tcp_conn::get_fd()
+{
+    return this->_connfd;
+}
+
 //处理读业务
 void tcp_conn::do_read()
 {
@@ -96,7 +101,9 @@ void tcp_conn::do_read()
         printf("read data: %s\n", ibuf.data());
 
         //回显业务
-        callback_busi(ibuf.data(), head.msglen, head.msgid, NULL, this);
+        // callback_busi(ibuf.data(), head.msglen, head.msgid, NULL, this);
+        //消息包路由模式
+        tcp_server::router.call(head.msgid, head.msglen, ibuf.data(), this);
 
         //消息体处理完了,往后便宜msglen长度
         ibuf.pop(head.msglen);
