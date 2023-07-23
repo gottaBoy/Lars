@@ -42,6 +42,28 @@ public:
     static void decrease_conn(int connfd);    //减少一个断开的连接
     static void get_conn_num(int *curr_conn);     //得到当前链接的刻度
     static tcp_conn **conns;        //全部已经在线的连接信息
+
+    //创建链接之后要触发的 回调函数
+    static conn_callback conn_start_cb;
+    static void *conn_start_cb_args;
+
+    //销毁链接之前要触发的 回调函数
+    static conn_callback conn_close_cb;
+    static void *conn_close_cb_args;
+
+    // ------- 创建链接/销毁链接 Hook 部分 -----
+    //设置链接的创建hook函数
+    static void set_conn_start(conn_callback cb, void *args = NULL) {
+        conn_start_cb = cb;
+        conn_start_cb_args = args;
+    }
+
+    //设置链接的销毁hook函数
+    static void set_conn_close(conn_callback cb, void *args = NULL) {
+        conn_close_cb = cb;
+        conn_close_cb_args = args;
+    }
+
 private:
     //TODO 
     //从配置文件中读取

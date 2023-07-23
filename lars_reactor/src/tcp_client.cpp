@@ -1,5 +1,3 @@
-#include "tcp_client.h"
-#include "message.h"
 #include <strings.h>
 #include <errno.h>
 #include <unistd.h>
@@ -7,6 +5,8 @@
 #include <assert.h>
 #include <sys/ioctl.h>
 #include <sys/event.h>
+#include "tcp_client.h"
+#include "message.h"
 
 static void write_callback(event_loop *loop, int fd, void *args)
 {
@@ -35,6 +35,11 @@ static void connection_delay(event_loop *loop, int fd, void *args)
 
         printf("connect %s:%d succ!\n", inet_ntoa(cli->_server_addr.sin_addr), ntohs(cli->_server_addr.sin_port));
 
+        //调用开发者注册的创建链接Hook函数
+        if (cli->_conn_start_cb != NULL) {
+            cli->_conn_start_cb(cli, cli->_conn_start_cb_args);
+        }
+
         // ================ 发送msgid：1 =====
         //建立连接成功之后，主动发送send_message
         const char *msg = "hello lars!";
@@ -62,6 +67,10 @@ static void connection_delay(event_loop *loop, int fd, void *args)
 }
 
 tcp_client::tcp_client(event_loop *loop, const char *ip, unsigned short port, const char *name):
+    _conn_start_cb(NULL),
+    _conn_start_cb_args(NULL),
+    _conn_close_cb(NULL),
+    _conn_close_cb_args(NULL),
     _obuf(4194304),
     _ibuf(4194304)
 {
@@ -99,6 +108,11 @@ void tcp_client::do_connect()
     if (ret == 0) {
         //链接创建成功      
         connected = true; 
+
+        //调用开发者客户端注册的创建链接之后的hook函数
+        if (_conn_start_cb != NULL) {
+            _conn_start_cb(this, _conn_start_cb_args);
+        }
 
         //注册读回调 EPOLLIN
         _loop->add_io_event(_sockfd, read_callback, EVFILT_READ, this);
@@ -293,6 +307,10 @@ void tcp_client::clean_conn()
 
     connected = false;
 
+    //调用开发者注册的销毁链接之前触发的Hook
+    if (_conn_close_cb != NULL) {
+        _conn_close_cb(this, _conn_close_cb_args);
+    }
     //重新连接
     this->do_connect();
 }

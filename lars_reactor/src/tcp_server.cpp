@@ -31,6 +31,14 @@ pthread_mutex_t tcp_server::_conns_mutex = PTHREAD_MUTEX_INITIALIZER;
 // ==== 消息分发路由   ===
 msg_router tcp_server::router;
 
+//创建链接之后的回调函数
+conn_callback tcp_server::conn_start_cb = NULL;
+void * tcp_server::conn_start_cb_args = NULL;
+
+//销毁链接之前的回调函数
+conn_callback tcp_server::conn_close_cb = NULL;
+void * tcp_server::conn_close_cb_args = NULL;
+
 //临时的收发消息
 // struct message{
 //     char data[m4K];

@@ -25,7 +25,13 @@ void event_loop::event_process()
         int nfds = kevent(_epfd, NULL, 0, _fired_evs, MAXEVENTS, NULL);
         for (int i = 0; i < nfds; i++) {
             //通过触发的fd找到对应的绑定事件
+            printf("nfds num = %d\n", nfds);
+            printf("nfds _fired_evs[i].ident = %lu\n", _fired_evs[i].ident);
+            printf("nfds _io_evs size = %lu\n", _io_evs.size());
+            
             ev_it = _io_evs.find(_fired_evs[i].ident);
+            int a = _fired_evs[i].ident;
+            printf("nfds fd = %lu\n", _io_evs[a].kev.ident);
             assert(ev_it != _io_evs.end());
 
             io_event *ev = &(ev_it->second);
@@ -58,6 +64,8 @@ void event_loop::event_process()
                     fprintf(stderr, "fd %lu get error, delete it from epoll\n", _fired_evs[i].ident);
                     this->del_io_event(_fired_evs[i].ident);
                 }
+            } else {
+                fprintf(stderr, "event_loop fd get error\n");
             }
 
         }
@@ -76,54 +84,34 @@ void event_loop::add_io_event(int fd, io_callback *proc, int mask, void *args)
 {
     int final_mask;
     int op;
-
+    struct kevent event;
     //1 找到当前fd是否已经有事件
     io_event_map_it it = _io_evs.find(fd);
+
     if (it == _io_evs.end()) {
         //2 如果没有操作动作就是ADD
-        //没有找到
-        final_mask = mask;    
-        // op = EPOLL_CTL_ADD;
-        op = EV_ADD;
+        final_mask = mask;
+        op = EV_ADD | EV_ENABLE;
     }
     else {
         //3 如果有操作董酒是MOD
         //添加事件标识位
         final_mask = it->second.mask | mask;
-        // op = EPOLL_CTL_MOD;
-        op = EV_ADD;
+        op = EV_ADD | EV_ENABLE;
     }
+    EV_SET(&event, fd, final_mask, op, 0, 0, NULL);  // 赋值
 
     //4 注册回调函数
-    // if (mask & EPOLLIN) {
-    if (mask & EVFILT_READ) {
-        //读事件回调函数注册
-        _io_evs[fd].read_callback = proc;
-        _io_evs[fd].rcb_args = args;
-    }
-    // else if (mask & EPOLLOUT) {
-    else if (mask & EVFILT_WRITE) {
-        _io_evs[fd].write_callback = proc;
-        _io_evs[fd].wcb_args = args;
-    }
-    
-    //5 epoll_ctl添加到epoll堆里
-    _io_evs[fd].mask = final_mask;
-    //创建原生epoll事件
-    // struct epoll_event event;
-    // event.events = final_mask;
-    // event.data.fd = fd;
-    struct kevent event;
-    // event.filter = final_mask;
-    // event.ident = fd;
-    // EV_SET(&event, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);  // 赋值
-    EV_SET(&event, fd, final_mask, EV_ADD, 0, 0, NULL);  // 赋值
+    _io_evs[fd].read_callback = proc;
+    _io_evs[fd].rcb_args = args;
     _io_evs[fd].kev = event;
-    kevent(_epfd, &event, op, NULL, 0, NULL);    // 添加
-    // if (epoll_ctl(_epfd, op, fd, &event) == -1) {
-    //     fprintf(stderr, "epoll ctl %d error\n", fd);
-    //     return;
-    // }
+    _io_evs[fd].mask = final_mask;
+
+    // 5 epoll_ctl添加到epoll堆里
+    if (kevent(_epfd, &event, 1, NULL, 0, NULL) == -1) {
+        fprintf(stderr, "epoll ctl %d error\n", fd);
+        return;
+    }
 
     //6 将fd添加到监听集合中
     listen_fds.insert(fd);
@@ -147,7 +135,7 @@ void event_loop::del_io_event(int fd)
     //将fd从epoll堆删除
     // epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
     EV_SET(&event, fd, NULL, EV_DELETE, 0, 0, NULL);  // 赋值
-    kevent(_epfd, &event, EV_DELETE, NULL, 0, NULL);    // 添加
+    kevent(_epfd, &event, 1, NULL, 0, NULL);    // 添加
 }
 
 //删除一个io事件的EPOLLIN/EPOLLOUT
