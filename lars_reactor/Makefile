@@ -1,6 +1,6 @@
 TARGET=lib/liblreactor.a
 CXX=g++
-CFLAGS=-g -O2 -Wall -fPIC -Wno-deprecated
+CFLAGS=-g --std=c++11 -O2 -Wall -fPIC -Wno-deprecated
 
 SRC=./src
 

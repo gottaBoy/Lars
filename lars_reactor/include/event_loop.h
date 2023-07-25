@@ -4,9 +4,9 @@
  * event_loop事件处理机制
  *
  * */
-// #include <sys/epoll.h>
-#include <sys/event.h>
-#include <sys/types.h>
+#include <sys/epoll.h>
+// #include <sys/event.h>
+// #include <sys/types.h>
 #include <ext/hash_map>
 #include <ext/hash_set>
 #include "event_base.h"
@@ -48,7 +48,7 @@ private:
     listen_fd_set listen_fds;
 
     //一次性最大处理的事件
-    // struct epoll_event _fired_evs[MAXEVENTS];
-    struct kevent _fired_evs[MAXEVENTS];
+    struct epoll_event _fired_evs[MAXEVENTS];
+    // struct kevent _fired_evs[MAXEVENTS];
     // struct kevent _change_evs[MAXEVENTS];
 };

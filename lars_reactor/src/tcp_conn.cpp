@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
+// #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -50,7 +50,7 @@ tcp_conn::tcp_conn(int connfd, event_loop *loop)
     }
 
     //3. 将该链接的读事件让event_loop监控 EPOLLIN
-    _loop->add_io_event(_connfd, conn_rd_callback, EVFILT_READ, this);
+    _loop->add_io_event(_connfd, conn_rd_callback, EPOLLIN, this);
 
     //4 将该链接集成到对应的tcp_server中
     tcp_server::increase_conn(_connfd, this);
@@ -143,7 +143,7 @@ void tcp_conn::do_write()
 
     if (obuf.length() == 0) {
         //数据已经全部写完，将_connfd的写事件取消掉 EPOLLOUT
-        _loop->del_io_event(_connfd, EVFILT_WRITE);
+        _loop->del_io_event(_connfd, EPOLLOUT);
     }
 
     return ;
@@ -182,7 +182,7 @@ int tcp_conn::send_message(const char *data, int msglen, int msgid)
 
     if (active_epollout == true) {
         //2. 激活EPOLLOUT写事件
-        _loop->add_io_event(_connfd, conn_wt_callback, EVFILT_WRITE, this);
+        _loop->add_io_event(_connfd, conn_wt_callback, EPOLLOUT, this);
     }
 
 

@@ -21,5 +21,5 @@ struct io_event
     io_callback *write_callback;//EPOLLOUT事件 触发的回调
     void *rcb_args; //read_callback的回调函数参数
     void *wcb_args; //write_callback的回调函数参数
-    struct kevent kev; 
+    // struct kevent kev; 
 };

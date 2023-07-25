@@ -4,7 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <sys/ioctl.h>
-#include <sys/event.h>
+// #include <sys/event.h>
 #include "tcp_client.h"
 #include "message.h"
 
@@ -53,11 +53,11 @@ static void connection_delay(event_loop *loop, int fd, void *args)
 		// ================
 
 		// EPOLLIN
-        loop->add_io_event(fd, read_callback, EVFILT_READ, cli);
+        loop->add_io_event(fd, read_callback, EPOLLIN, cli);
 
         if (cli->_obuf.length != 0) {
             //输出缓冲有数据可写 EPOLLOUT
-            loop->add_io_event(fd, write_callback, EVFILT_WRITE, cli);
+            loop->add_io_event(fd, write_callback, EPOLLOUT, cli);
         }
     }
     else {
@@ -98,7 +98,7 @@ void tcp_client::do_connect()
     }
 
     //创建套接字
-    _sockfd = socket(AF_INET, SOCK_STREAM /*| SOCK_CLOEXEC | SOCK_NONBLOCK*/, IPPROTO_TCP);
+    _sockfd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC /*| SOCK_NONBLOCK*/, IPPROTO_TCP);
     if (_sockfd == -1) {
         fprintf(stderr, "create tcp client socket error\n");
         exit(1);
@@ -114,11 +114,11 @@ void tcp_client::do_connect()
             _conn_start_cb(this, _conn_start_cb_args);
         }
 
-        //注册读回调 EPOLLIN
-        _loop->add_io_event(_sockfd, read_callback, EVFILT_READ, this);
-        //如果写缓冲去有数据，那么也需要触发写回调 EPOLLOUT
+        //注册读回调 EVFILT_READ
+        _loop->add_io_event(_sockfd, read_callback, EPOLLIN, this);
+        //如果写缓冲去有数据，那么也需要触发写回调 EVFILT_WRITE
         if (this->_obuf.length != 0) {
-            _loop->add_io_event(_sockfd, write_callback, EVFILT_WRITE, this);
+            _loop->add_io_event(_sockfd, write_callback, EPOLLOUT, this);
         }
             
         printf("connect %s:%d succ!\n", inet_ntoa(_server_addr.sin_addr), ntohs(_server_addr.sin_port));
@@ -130,7 +130,7 @@ void tcp_client::do_connect()
             fprintf(stderr, "do_connect EINPROGRESS\n");
 
             //让event_loop去触发一个创建判断链接业务 用EPOLLOUT事件立刻触发
-            _loop->add_io_event(_sockfd, connection_delay, EVFILT_WRITE, this);
+            _loop->add_io_event(_sockfd, connection_delay, EPOLLOUT, this);
         }
         else {
             fprintf(stderr, "connection error\n");
@@ -173,8 +173,8 @@ int tcp_client::send_message(const char *data, int msglen, int msgid)
     _obuf.length += msglen;
 
     if (need_add_event) {
-        // EPOLLOUT
-        _loop->add_io_event(_sockfd, write_callback, EVFILT_WRITE, this);
+        // EVFILT_WRITE
+        _loop->add_io_event(_sockfd, write_callback, EPOLLOUT, this);
     }
 
     return 0;
@@ -290,7 +290,7 @@ int tcp_client::do_write()
     if (_obuf.length == 0) {
         //已经写完，删除写事件
         printf("do write over, del EPOLLOUT\n");
-        this->_loop->del_io_event(_sockfd, EVFILT_WRITE);
+        this->_loop->del_io_event(_sockfd, EPOLLOUT);
     }
 
     return 0;

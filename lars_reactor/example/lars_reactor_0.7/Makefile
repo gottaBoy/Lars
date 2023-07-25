@@ -1,5 +1,5 @@
 CXX=g++
-CFLAGS=-g -O2 -Wall -fPIC -Wno-deprecated 
+CFLAGS=-g --std=c++11 -O2 -Wall -fPIC -Wno-deprecated 
 
 INC=-I../../include
 LIB=-L../../lib -llreactor -lpthread

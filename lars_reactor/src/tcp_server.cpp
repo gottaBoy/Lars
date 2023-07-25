@@ -5,8 +5,8 @@
 
 #include <unistd.h>
 #include <signal.h>
-#include <sys/event.h>
-#include <sys/types.h>          /* See NOTES */
+// #include <sys/event.h>
+// #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -117,7 +117,7 @@ tcp_server::tcp_server(event_loop *loop, const char *ip, uint16_t port)
     //===========================================
 
     //7 注册_socket读事件-->accept处理
-    _loop->add_io_event(_sockfd, accept_callback, EVFILT_READ, this);
+    _loop->add_io_event(_sockfd, accept_callback, EPOLLIN, this);
 }
 
 //新增一个新建的连接
