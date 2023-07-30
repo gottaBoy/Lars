@@ -34,7 +34,7 @@ int main()
     event_loop loop;
 
     //创建tcp客户端
-    tcp_client client(&loop, "127.0.0.1", 7777, "clientv0.7");
+    tcp_client client(&loop, "127.0.0.1", 7777, "clientv0.9");
 
     //注册消息路由业务
     client.add_msg_router(1, busi);

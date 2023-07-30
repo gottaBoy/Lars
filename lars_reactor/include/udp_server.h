@@ -17,6 +17,9 @@ public:
 
     ~udp_server();
 
+    //得到fd
+    int get_fd();
+
     //处理消息业务
     void do_read();
     

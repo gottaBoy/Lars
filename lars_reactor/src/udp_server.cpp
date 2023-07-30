@@ -94,6 +94,11 @@ udp_server::udp_server(event_loop *loop, const char *ip, uint16_t port)
     
 }
 
+int udp_server::get_fd()
+{
+    return _sockfd;
+}
+
 int udp_server::send_message(const char *data, int msglen, int msgid)
 {
     if (msglen > MESSAGE_LENGTH_LIMIT) {

@@ -87,6 +87,11 @@ void udp_client::add_msg_router(int msgid, msg_callback *cb, void *user_data)
     _router.register_msg_router(msgid, cb, user_data);
 }
 
+int udp_client::get_fd()
+{
+    return _sockfd;
+}
+
 int udp_client::send_message(const char *data, int msglen, int msgid)
 {
     if (msglen > MESSAGE_LENGTH_LIMIT) {
