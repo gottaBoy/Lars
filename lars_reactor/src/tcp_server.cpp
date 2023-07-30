@@ -14,6 +14,7 @@
 #include "tcp_server.h"
 #include "tcp_conn.h"
 #include "reactor_buf.h"
+#include "thread_pool.h"
 
 // ==== 链接资源管理   ====
 //全部已经在线的连接信息
@@ -116,7 +117,17 @@ tcp_server::tcp_server(event_loop *loop, const char *ip, uint16_t port)
     }
     //===========================================
 
-    //7 注册_socket读事件-->accept处理
+    //7 创建线程池
+    int thread_cnt = 3;//TODO 从配置文件中读取
+    if (thread_cnt > 0) {
+        _thread_pool = new thread_pool(thread_cnt);
+        if (_thread_pool == NULL) {
+            fprintf(stderr, "tcp_server new thread_pool error\n");
+            exit(1);
+        }
+    }
+
+    //8 注册_socket读事件-->accept处理
     _loop->add_io_event(_sockfd, accept_callback, EPOLLIN, this);
 }
 
@@ -257,16 +268,31 @@ void tcp_server::do_accept()
                 fprintf(stderr, "so many connections, max = %d\n", _max_conns);
                 close(connfd);
             }
-            else {
-                tcp_conn *conn = new tcp_conn(connfd, _loop);
-                if (conn == NULL) {
-                    fprintf(stderr, "new tcp_conn error\n");
-                    exit(1);
+            else { 
+                // 将新连接由线程池处理
+                if (_thread_pool != NULL) {
+                    //启动多线程模式 创建链接
+                    //1 选择一个线程来处理
+                    thread_queue<task_msg>* queue = _thread_pool->get_thread();
+                    //2 创建一个新建链接的消息任务
+                    task_msg task;
+                    task.type = task_msg::NEW_CONN;
+                    task.connfd = connfd;
+
+                    //3 添加到消息队列中，让对应的thread进程event_loop处理
+                    queue->send(task);
+                } else {
+                    //启动单线程模式
+                    tcp_conn *conn = new tcp_conn(connfd, _loop);
+                    if (conn == NULL) {
+                        fprintf(stderr, "new tcp_conn error\n");
+                        exit(1);
+                    }
+                    printf("[tcp_server]: get new connection succ!\n");
+                    break;
                 }
-                printf("get new connection succ!\n");
             }
             break;
-            
         }
     }
 }

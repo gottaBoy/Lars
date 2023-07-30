@@ -16,6 +16,8 @@ nc 127.0.0.1 7777
 ```
 
 # 链接
+- [图解 | 深入揭秘 epoll 是如何实现 IO 多路复用的](https://www.ithome.com/0/644/835.htm)
+- [C++ workflow](https://zhuanlan.zhihu.com/p/484293077)
 - [sockaddr和sockaddr_in详解](https://blog.csdn.net/qingzhuyuxian/article/details/79736821)
 - [设计模式](https://blog.csdn.net/u014376961/category_9315271.html)
 - [socket](https://blog.csdn.net/u014376961/article/details/88614029)

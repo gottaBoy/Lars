@@ -6,6 +6,7 @@
 #include "event_loop.h"
 #include "tcp_conn.h"
 #include "message.h"
+#include "thread_pool.h"
 
 class tcp_server
 { 
@@ -65,7 +66,8 @@ public:
     }
 
 private:
-    //TODO 
+    //线程池
+    thread_pool *_thread_pool;
     //从配置文件中读取
 #define MAX_CONNS  2
     static int _max_conns;          //最大client链接个数
