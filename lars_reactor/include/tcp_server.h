@@ -25,6 +25,11 @@ public:
         router.register_msg_router(msgid, cb, user_data);
     }
 
+    //获取当前server的线程池
+    thread_pool *thread_poll() {
+        return _thread_pool;
+    }
+
 public:
     //---- 消息分发路由 ----
     static msg_router router; 
@@ -69,7 +74,7 @@ private:
     //线程池
     thread_pool *_thread_pool;
     //从配置文件中读取
-#define MAX_CONNS  2
+    // #define MAX_CONNS  2
     static int _max_conns;          //最大client链接个数
     static int _curr_conns;         //当前链接刻度
     static pthread_mutex_t _conns_mutex; //保护_curr_conns刻度修改的锁
